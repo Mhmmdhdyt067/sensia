@@ -17,6 +17,11 @@ app = Flask(__name__)
 METRICS_PATH = Path(__file__).with_name("metrics.json")
 
 
+def _check_label_map(label_map: dict) -> None:
+    if label_map != {str(i): label for i, label in enumerate(LABELS)}:
+        raise ValueError(f"label_map.json tidak cocok dengan LABELS: {label_map}")
+
+
 def load_artifacts(model_dir: Path = MODEL_DIR):
     model_dir = Path(model_dir)
     paths = {name: model_dir / name for name in ("sensia_bilstm.keras", "tokenizer.json", "label_map.json")}
@@ -27,8 +32,7 @@ def load_artifacts(model_dir: Path = MODEL_DIR):
     model = load_model(paths["sensia_bilstm.keras"])
     tokenizer = tokenizer_from_json(paths["tokenizer.json"].read_text())
     label_map = json.loads(paths["label_map.json"].read_text())
-    if [label_map[str(i)] for i in range(len(LABELS))] != LABELS:
-        raise ValueError(f"label_map.json tidak cocok dengan LABELS: {label_map}")
+    _check_label_map(label_map)
     return model, tokenizer, label_map
 
 

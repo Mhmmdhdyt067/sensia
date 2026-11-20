@@ -14,10 +14,10 @@ Repo ini **belum** memenuhi target awal di dokumen desain. Yang sudah dan belum 
 | Baris mentah | 1200 unik | **1218** (1.108 lolos screening) |
 | Baris dataset | 900 berlabel (300/kelas) | **1.108** (121 negatif / 812 netral / 175 positif) |
 | Verifikasi label | semua baris dibaca manusia + cek ulang 10% | **belum** — label masih draft berbasis aturan kata kunci |
-| Test accuracy | ≥ 0.75 | **0.739** — sama persis dengan baseline mayoritas kelas |
-| Macro F1 | ≥ 0.70 | **0.283** |
+| Test accuracy | ≥ 0.75 | **0.730** — praktis sama dengan baseline mayoritas kelas |
+| Macro F1 | ≥ 0.70 | **0.357** |
 
-Model yang ada dilatih pada 886 baris training dan runtuh ke kelas mayoritas: pada 111 baris uji ia memprediksi `netral` untuk semuanya. Akurasi 0.739 identik dengan baseline mayoritas, dan kelas `negatif`/`positif` mendapat F1 0.000. Menambah data tidak menolong karena labelnya belum diverifikasi — kelas `netral` menampung semua komentar yang tidak memuat kata kunci sentimen. Artefaknya di-commit supaya pipeline dan web app bisa dijalankan dan diuji, **bukan** sebagai model yang siap dipakai.
+Model dilatih pada 886 baris training dan masih condong ke kelas mayoritas: dari 111 baris uji, 78 diprediksi `netral` dan tidak satu pun `negatif`. Akurasi 0.730 tidak lebih baik dari baseline mayoritas, dan F1 kelas `negatif` 0.000. Menambah data tidak menolong karena labelnya belum diverifikasi — kelas `netral` menampung semua komentar yang tidak memuat kata kunci sentimen. Artefaknya di-commit supaya pipeline dan web app bisa dijalankan dan diuji, **bukan** sebagai model yang siap dipakai.
 
 ## Struktur folder
 
@@ -78,9 +78,9 @@ Dari `webapp/metrics.json` (bukan angka yang diketik manual):
 
 | Metrik | Nilai |
 |---|---|
-| Accuracy (test) | 0.739 |
-| Macro F1 (test) | 0.283 |
-| Baseline mayoritas kelas | 0.739 |
+| Accuracy (test) | 0.730 |
+| Macro F1 (test) | 0.357 |
+| Baseline mayoritas kelas | 0.730 |
 | Split train/val/test | 886 / 111 / 111 |
 
 Per kelas pada 111 baris test:
@@ -88,14 +88,28 @@ Per kelas pada 111 baris test:
 | Kelas | Precision | Recall | F1 | Support |
 |---|---|---|---|---|
 | negatif | 0.000 | 0.000 | 0.000 | 12 |
-| netral | 0.739 | 1.000 | 0.850 | 82 |
-| positif | 0.000 | 0.000 | 0.000 | 17 |
+| netral | 0.780 | 0.951 | 0.857 | 82 |
+| positif | 0.273 | 0.176 | 0.214 | 17 |
 
 `class_weight` seimbang sudah dicoba (0.684 accuracy / 0.576 macro F1) dan tetap tidak melewati kedua ambang; nilainya tidak dipakai karena mengorbankan akurasi tanpa menyelesaikan penyebabnya. Penyebabnya ada di label, bukan di arsitektur: selama `netral` adalah tempat sampah untuk komentar tanpa kata kunci, model belajar satu kelas saja.
 
 ## Melanjutkan proyek ini
 
 Urutannya penting — memperbaiki model sebelum memperbaiki data hanya menghasilkan overfit yang lebih rapi.
+
+### Dua file data
+
+| File | Isi | Untuk |
+|---|---|---|
+| `data/labeled/sensia_verifikasi.xlsx` | `label` kosong + `label_saran` | diisi manusia, mengikuti `docs/labeling-guide.md` |
+| `data/labeled/sensia_labeled.xlsx` | `label` dari aturan kata kunci | dibaca notebook; **belum** diverifikasi |
+
+Keduanya dibangun dari teks yang identik, jadi label yang sudah diperiksa bisa disalin langsung:
+
+```bash
+python scripts/prelabel.py            # workbook verifikasi (label kosong)
+python scripts/prelabel.py --draft    # file latih dari label aturan
+```
 
 1. **Login ke X di browser yang dipakai pengambilan data**, lalu ambil kata kunci yang sama seperti di `docs/superpowers/plans/2026-11-20-sensia.md`. Tambahkan baris dengan `platform = x`.
 2. **Verifikasi semua label** di `data/labeled/sensia_labeled.xlsx` mengikuti `docs/labeling-guide.md`, lalu simpan ulang 5 kolom final lewat `sensia.dataset.validate_labeled` + `dedupe_labeled`.

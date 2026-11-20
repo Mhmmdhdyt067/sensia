@@ -64,3 +64,11 @@ def test_screen_raw_drops_promo_and_short_rows():
         "tanggal": ["2026-11-14"] * 3,
     })
     assert len(screen_raw(df)) == 1
+
+
+def test_strip_ui_noise_removes_scraping_artifacts():
+    from sensia.dataset import strip_ui_noise
+
+    df = pd.DataFrame({"text": ["07/01/26 IHSG anjlok lagi hari ini Translate",
+                                "saham naik terus hari ini /"]})
+    assert list(strip_ui_noise(df)["text"]) == ["IHSG anjlok lagi hari ini", "saham naik terus hari ini"]

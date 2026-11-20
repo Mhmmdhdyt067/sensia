@@ -72,7 +72,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: teks.value }),
       });
-      const body = await res.json();
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         galat.textContent = body.error || "Terjadi kesalahan.";
         galat.hidden = false;

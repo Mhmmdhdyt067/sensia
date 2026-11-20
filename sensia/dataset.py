@@ -47,6 +47,16 @@ def dedupe_labeled(df: pd.DataFrame) -> pd.DataFrame:
     return df[~key.duplicated()].reset_index(drop=True)
 
 
+def strip_ui_noise(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove scraped UI artefacts (date prefix, "Translate", trailing slash) from `text`."""
+    df = df.copy()
+    text = df["text"].astype(str).str.replace(r"^\d{2}/\d{2}/\d{2}\s+", "", regex=True)
+    for _ in range(2):
+        text = text.str.replace(r"\s*(?:Translate|/)\s*$", "", regex=True)
+    df["text"] = text.str.strip()
+    return df
+
+
 def screen_raw(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     text = df["text"].astype(str)

@@ -68,3 +68,10 @@ def test_predict_rejects_non_string_text(client):
 
 def test_predict_rejects_non_object_body(client):
     assert client.post("/predict", json=42).status_code == 400
+
+
+def test_truncated_label_map_raises_value_error():
+    from webapp.app import _check_label_map
+
+    with pytest.raises(ValueError, match="label_map"):
+        _check_label_map({"0": "negatif", "1": "netral"})
