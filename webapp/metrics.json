@@ -1,1 +1,1 @@
-{"accuracy": 0.7297, "macro_f1": 0.3571, "n_train": 886, "n_val": 111, "n_test": 111}
+{"accuracy": 0.7407, "macro_f1": 0.2849, "n_train": 1078, "n_val": 135, "n_test": 135}
