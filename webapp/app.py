@@ -49,18 +49,21 @@ def index():
 
 @app.post("/predict")
 def predict():
-    payload = request.get_json(silent=True) or {}
-    text = str(payload.get("text", "")).strip()
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or not isinstance(payload.get("text"), str):
+        return jsonify(error='Body harus JSON berbentuk {"text": string}.'), 400
+    text = payload["text"].strip()
     if len(text) < 3:
         return jsonify(error="Teks minimal 3 karakter."), 400
     if len(text) > 500:
         return jsonify(error="Teks maksimal 500 karakter."), 400
 
     clean = clean_text(text)
-    if not clean:
+    tokens = tokenizer.texts_to_sequences([clean])[0]
+    if not tokens:
         return jsonify(error="Teks tidak mengandung kata yang bisa dianalisis."), 400
 
-    seq = pad_sequences(tokenizer.texts_to_sequences([clean]), maxlen=MAX_LEN, padding="post", truncating="post")
+    seq = pad_sequences([tokens], maxlen=MAX_LEN, padding="post", truncating="post")
     probs = model.predict(seq, verbose=0)[0]
     best = int(probs.argmax())
     return jsonify(

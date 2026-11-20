@@ -55,3 +55,16 @@ def test_label_map_must_match_labels():
 def test_load_artifacts_missing_model_message(tmp_path):
     with pytest.raises(FileNotFoundError, match="notebook"):
         load_artifacts(tmp_path)
+
+
+def test_predict_rejects_punctuation_only(client):
+    assert client.post("/predict", json={"text": ".,.,."}).status_code == 400
+
+
+def test_predict_rejects_non_string_text(client):
+    assert client.post("/predict", json={"text": None}).status_code == 400
+    assert client.post("/predict", json={"text": {"a": 1}}).status_code == 400
+
+
+def test_predict_rejects_non_object_body(client):
+    assert client.post("/predict", json=42).status_code == 400
