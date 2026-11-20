@@ -11,12 +11,13 @@ Repo ini **belum** memenuhi target awal di dokumen desain. Yang sudah dan belum 
 | Hal | Target desain | Keadaan di repo |
 |---|---|---|
 | Sumber data | X + Threads | **Threads saja** — pencarian X memerlukan login dan belum dilakukan |
-| Baris dataset | 900 berlabel (300/kelas) | **77** (31 negatif / 33 netral / 13 positif) |
+| Baris mentah | 1200 unik | **1218** (1.108 lolos screening) |
+| Baris dataset | 900 berlabel (300/kelas) | **1.108** (121 negatif / 812 netral / 175 positif) |
 | Verifikasi label | semua baris dibaca manusia + cek ulang 10% | **belum** — label masih draft berbasis aturan kata kunci |
-| Test accuracy | ≥ 0.75 | **0.500**, setara baseline mayoritas kelas |
-| Macro F1 | ≥ 0.70 | **0.222** |
+| Test accuracy | ≥ 0.75 | **0.739** — sama persis dengan baseline mayoritas kelas |
+| Macro F1 | ≥ 0.70 | **0.283** |
 
-Model yang ada dilatih pada 61 baris training dan runtuh ke kelas mayoritas (`netral`). Artefaknya di-commit supaya pipeline dan web app bisa dijalankan dan diuji, **bukan** sebagai model yang siap dipakai. Perbaikan yang benar adalah menambah data dan memverifikasi label, bukan mengubah arsitektur.
+Model yang ada dilatih pada 886 baris training dan runtuh ke kelas mayoritas: pada 111 baris uji ia memprediksi `netral` untuk semuanya. Akurasi 0.739 identik dengan baseline mayoritas, dan kelas `negatif`/`positif` mendapat F1 0.000. Menambah data tidak menolong karena labelnya belum diverifikasi — kelas `netral` menampung semua komentar yang tidak memuat kata kunci sentimen. Artefaknya di-commit supaya pipeline dan web app bisa dijalankan dan diuji, **bukan** sebagai model yang siap dipakai.
 
 ## Struktur folder
 
@@ -77,20 +78,20 @@ Dari `webapp/metrics.json` (bukan angka yang diketik manual):
 
 | Metrik | Nilai |
 |---|---|
-| Accuracy (test) | 0.500 |
-| Macro F1 (test) | 0.222 |
-| Baseline mayoritas kelas | 0.500 |
-| Split train/val/test | 61 / 8 / 8 |
+| Accuracy (test) | 0.739 |
+| Macro F1 (test) | 0.283 |
+| Baseline mayoritas kelas | 0.739 |
+| Split train/val/test | 886 / 111 / 111 |
 
-Per kelas pada 8 baris test:
+Per kelas pada 111 baris test:
 
 | Kelas | Precision | Recall | F1 | Support |
 |---|---|---|---|---|
-| negatif | 0.000 | 0.000 | 0.000 | 3 |
-| netral | 0.500 | 1.000 | 0.667 | 4 |
-| positif | 0.000 | 0.000 | 0.000 | 1 |
+| negatif | 0.000 | 0.000 | 0.000 | 12 |
+| netral | 0.739 | 1.000 | 0.850 | 82 |
+| positif | 0.000 | 0.000 | 0.000 | 17 |
 
-Angka ini lebih kecil dari sampel uji, jadi tidak bisa dipakai menyimpulkan kemampuan model per kelas. Yang bisa disimpulkan: pada data sekecil ini model tidak belajar membedakan kelas.
+`class_weight` seimbang sudah dicoba (0.684 accuracy / 0.576 macro F1) dan tetap tidak melewati kedua ambang; nilainya tidak dipakai karena mengorbankan akurasi tanpa menyelesaikan penyebabnya. Penyebabnya ada di label, bukan di arsitektur: selama `netral` adalah tempat sampah untuk komentar tanpa kata kunci, model belajar satu kelas saja.
 
 ## Melanjutkan proyek ini
 
@@ -107,3 +108,4 @@ Urutannya penting — memperbaiki model sebelum memperbaiki data hanya menghasil
 - Dataset masih kecil, satu platform, dan labelnya belum diverifikasi manusia.
 - Komentar diambil dari postingan publik; teks disimpan apa adanya tanpa username, handle, atau foto.
 - Kalimat di luar gaya bahasa saham media sosial Indonesia kemungkinan salah diklasifikasi.
+- Teks mentah dibersihkan dari artefak UI hasil pengambilan data (prefix tanggal `MM/DD/YY`, label `Translate`, garis miring penutup); isi komentar tidak diubah.
