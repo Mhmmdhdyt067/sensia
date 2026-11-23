@@ -1,1 +1,9 @@
-{"accuracy": 0.7407, "macro_f1": 0.2849, "n_train": 1078, "n_val": 135, "n_test": 135}
+{
+  "model": "Bi-LSTM",
+  "accuracy": 0.5714,
+  "macro_f1": 0.5719,
+  "weighted_f1": 0.5719,
+  "n_train": 1172,
+  "n_val": 146,
+  "n_test": 147
+}

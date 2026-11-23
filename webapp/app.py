@@ -1,20 +1,60 @@
 import json
-import sys
+import re
 from pathlib import Path
-
-if __package__ in (None, ""):  # `python webapp/app.py` puts webapp/ on sys.path, not the repo root
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import Flask, jsonify, render_template, request
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
-from sensia.config import LABELS, MAX_LEN, MODEL_DIR
-from sensia.preprocess import clean_text
+LABELS = ["negatif", "netral", "positif"]
+MAX_LEN = 100
+MODEL_DIR = Path(__file__).resolve().parent.parent / "model"
+METRICS_PATH = Path(__file__).with_name("metrics.json")
+
+SLANG = {
+    "udah": "sudah", "sdh": "sudah", "blm": "belum", "gak": "tidak",
+    "ga": "tidak", "nggak": "tidak", "gk": "tidak", "tdk": "tidak",
+    "bgt": "banget", "bngt": "banget", "yg": "yang", "dgn": "dengan",
+    "utk": "untuk", "krn": "karena", "krna": "karena", "jg": "juga",
+    "aja": "saja", "bkn": "bukan", "lg": "lagi", "msh": "masih",
+    "hrs": "harus", "bs": "bisa", "dpt": "dapat", "sy": "saya",
+    "gw": "saya", "gue": "saya", "ane": "saya", "lu": "kamu",
+    "lo": "kamu", "emg": "memang", "mmg": "memang", "pdhl": "padahal",
+    "sbnrnya": "sebenarnya", "skrg": "sekarang", "tgl": "tanggal",
+    "hr": "hari", "thn": "tahun", "bln": "bulan", "cuan": "untung",
+    "boncos": "rugi", "nyangkut": "terjebak", "banting": "jual",
+    "hijau": "naik", "merah": "turun",
+}
+
+_URL = re.compile(r"https?://\S+|www\.\S+")
+_MENTION = re.compile(r"@\w+")
+_HASHTAG = re.compile(r"#")
+_NOT_ALLOWED = re.compile(r"[^a-z0-9\s]")
+_SPACES = re.compile(r"\s+")
+_SLANG_PATTERN = re.compile(
+    r"\b(" + "|".join(sorted(map(re.escape, SLANG), key=len, reverse=True)) + r")\b"
+)
+
+
+def basic_clean(text: str) -> str:
+    text = str(text).lower()
+    text = _URL.sub(" ", text)
+    text = _MENTION.sub(" ", text)
+    text = _HASHTAG.sub("", text)
+    text = _NOT_ALLOWED.sub(" ", text)
+    return _SPACES.sub(" ", text).strip()
+
+
+def normalize_slang(text: str) -> str:
+    return _SLANG_PATTERN.sub(lambda m: SLANG[m.group(0)], text)
+
+
+def clean_text(text: str) -> str:
+    return normalize_slang(basic_clean(text))
+
 
 app = Flask(__name__)
-METRICS_PATH = Path(__file__).with_name("metrics.json")
 
 
 def _check_label_map(label_map: dict) -> None:
@@ -24,16 +64,20 @@ def _check_label_map(label_map: dict) -> None:
 
 def load_artifacts(model_dir: Path = MODEL_DIR):
     model_dir = Path(model_dir)
-    paths = {name: model_dir / name for name in ("sensia_bilstm.keras", "tokenizer.json", "label_map.json")}
+    paths = {
+        name: model_dir / name
+        for name in ("sensia_bilstm.keras", "tokenizer.json", "label_map.json")
+    }
     if not all(p.exists() for p in paths.values()):
         raise FileNotFoundError(
-            f"Artefak model tidak ditemukan di {model_dir}. Jalankan notebook sensia_bilstm.ipynb dulu untuk menghasilkannya."
+            f"Artefak model tidak ditemukan di {model_dir}. "
+            "Jalankan notebook sensia_bilstm.ipynb dulu untuk menghasilkannya."
         )
-    model = load_model(paths["sensia_bilstm.keras"])
-    tokenizer = tokenizer_from_json(paths["tokenizer.json"].read_text())
-    label_map = json.loads(paths["label_map.json"].read_text())
-    _check_label_map(label_map)
-    return model, tokenizer, label_map
+    loaded_model = load_model(paths["sensia_bilstm.keras"])
+    loaded_tokenizer = tokenizer_from_json(paths["tokenizer.json"].read_text())
+    loaded_label_map = json.loads(paths["label_map.json"].read_text())
+    _check_label_map(loaded_label_map)
+    return loaded_model, loaded_tokenizer, loaded_label_map
 
 
 def load_metrics() -> dict:
