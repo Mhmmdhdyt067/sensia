@@ -11,8 +11,8 @@ Repo ini **belum** memenuhi target awal di dokumen desain. Yang sudah dan belum 
 | Hal | Target desain | Keadaan di repo |
 |---|---|---|
 | Sumber data | X + Threads | **Threads saja** — pencarian X memerlukan login dan belum dilakukan |
-| Baris mentah | 1200 unik | **1.488** (1.348 lolos screening) |
-| Baris dataset | 900 berlabel (300/kelas) | **1.348** (145 negatif / 996 netral / 207 positif) |
+| Baris mentah | 1200 unik | **1.589** (1.465 lolos screening; 107 di antaranya transkripsi manual 35 screenshot di `data/screenshot/`) |
+| Baris dataset | 900 berlabel (300/kelas) | **1.465** draft aturan (159 negatif / 1.085 netral / 221 positif), belum diverifikasi manusia |
 | Verifikasi label | semua baris dibaca manusia + cek ulang 10% | **belum** — label masih draft berbasis aturan kata kunci |
 | Test accuracy | ≥ 0.75 | **0.741** — praktis sama dengan baseline mayoritas kelas |
 | Macro F1 | ≥ 0.70 | **0.285** |

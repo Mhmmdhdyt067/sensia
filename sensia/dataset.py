@@ -7,7 +7,7 @@ from sensia.config import LABELS
 COLUMNS = ["text", "platform", "kata_kunci", "tanggal", "label"]
 PLATFORMS = {"x", "threads"}
 
-_PROMO = re.compile(r"promo|judi|slot|gacor|pinjol|casino|betting", re.IGNORECASE)
+_PROMO = re.compile(r"slot\s*gacor|gacor|pinjol|judi\s*online|situs\s*judi|casino|betting", re.IGNORECASE)
 _NON_ALNUM = re.compile(r"[^a-z0-9]")
 
 
