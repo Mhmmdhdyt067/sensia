@@ -54,7 +54,7 @@ def clean_text(text: str) -> str:
     return normalize_slang(basic_clean(text))
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 
 
 def _check_label_map(label_map: dict) -> None:
